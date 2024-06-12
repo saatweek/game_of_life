@@ -8,18 +8,22 @@ Game of life has 4 rules :
 
 # importing libraries
 import pygame
+import pygame_widgets
+from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
 import random
 
 # initialize the pygame module so we can utilize it
 pygame.init()
+pygame.font.init()
 
 # three colors that we'll be using for the game
 BLACK = (0, 0, 0)
 GREY = (128, 128, 128)
 YELLOW = (255, 255, 0)
 
-WIDTH, HEIGHT = 200, 200  # height and width of the screen where we'll play the game
-TILE_SIZE = 20  # width and height of each individual grid box
+WIDTH, HEIGHT = 1280, 720  # height and width of the screen where we'll play the game
+TILE_SIZE = 10  # width and height of each individual grid box
 GRID_WIDTH = WIDTH // TILE_SIZE  # number of tiles we'll have across the width
 GRID_HEIGHT = HEIGHT // TILE_SIZE  # number of tiles we'll have across the height of the screen
 FPS = 60
@@ -27,11 +31,14 @@ FPS = 60
 # now the screen is where we'll be doing all our pygame drawing. This is how we initialize a new pygame window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
+slider = Slider(screen, 400, 15, 600, 20, min=4, max=20, step=1)
+output = TextBox(screen, 475, 200, 50, 50, fontSize=30)
+
 clock = pygame.time.Clock()
 
 
 def gen(num):
-    return set([(random.randrange(0, GRID_HEIGHT), random.randrange(0, GRID_WIDTH)) for _ in range(num)])
+    return set([(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT)) for _ in range(num)])
 
 
 def draw_grid(positions):  # it takes in a set of positions where there are live cells, so that for checking the rules,
@@ -91,6 +98,25 @@ def get_neighbors(pos):
     return neighbors
 
 
+def get_outer_neighbors(pos, inner_neighbors, radius=4):
+    x, y = pos
+    neighbors = []
+    for dx in range(-radius, radius + 1):
+        if x + dx < 0 or x + dx > GRID_WIDTH:
+            continue
+        for dy in range(-radius + abs(dx), radius - abs(dx) + 1):
+            if y + dy < 0 or y + dy > GRID_HEIGHT:
+                continue
+            if dx == 0 and dy == 0:
+                continue
+            if (x + dx, y + dx) in inner_neighbors:
+                continue
+
+            neighbors.append((x + dx, y + dy))
+
+    return neighbors
+
+
 def main():
     """
     Whenever we're working with pygame we have something called as an event loop or a main loop, and this function is
@@ -101,9 +127,11 @@ def main():
     playing = False
     count = 0
     update_freq = 10
+    iterations = 0
 
     positions = set()  # just mentioning that positions is a set of locations where there'll be live cells
     while running:  # this is our main loop
+        font = pygame.font.Font(None, 36)
         clock.tick(FPS)  # this regulates the speed of the while loop, so that it only executes that many times in
         # second. It's not a problem in slow computers, but it'll restrict the fast computers where this can go haywire
 
@@ -113,6 +141,7 @@ def main():
         if count >= update_freq:
             count = 0
             positions = adjust_grid(positions)
+            iterations += 1
 
         pygame.display.set_caption("Playing" if playing else "Paused")
 
@@ -122,7 +151,7 @@ def main():
                 running = False
 
             # if event.type == pygame.MOUSEBUTTONDOWN:  # if it registers a mouse click
-            if pygame.mouse.get_pressed()[0]:
+            if pygame.mouse.get_pressed()[0]:  # this argument instead allows the user to click and drag
                 x, y = pygame.mouse.get_pos()  # get the positions for the moues click
                 col = x // TILE_SIZE  # figuring out the tile position from the mouse coordinates
                 row = y // TILE_SIZE
@@ -143,12 +172,17 @@ def main():
                     positions = set()  # the set of positions is emptied out
                     playing = False  # and the game is paused
                     count = 0
+                    iterations = 0
 
                 if event.key == pygame.K_g:
                     positions = gen(random.randrange(4, 10) * GRID_WIDTH)
 
         screen.fill(GREY)  # we're going to fill the screen with GREY color
         draw_grid(positions)  # and then we're going to draw the grid.
+        score_text = font.render(f'Iterations: {iterations}', True, (255, 255, 255))
+        screen.blit(score_text, (10, 10))
+        output.setText(slider.getValue())
+        pygame_widgets.update(event)
         pygame.display.update()  # and then we'll update the display
         # The above three commands needs to be in order. If we wrote draw_grid, and then screen.fill, then you'll
         # only see a gray screen because pygame would draw the grid, and then fill the screen with GREY
