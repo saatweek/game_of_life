@@ -13,6 +13,7 @@ from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
 import random
 import numpy as np
+import raster_geometry
 
 # initialize the pygame module so we can utilize it
 pygame.init()
@@ -180,4 +181,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
+    print(np.round(raster_geometry.circle(20, 9, smoothing=1.0), 2) - np.round(raster_geometry.circle(20, 3, smoothing=0.5), 2))

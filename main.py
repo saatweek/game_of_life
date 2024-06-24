@@ -11,8 +11,6 @@ import pygame
 from pygame_widgets.textbox import TextBox
 import random
 from pygame.gfxdraw import filled_circle
-import raster_geometry
-import numpy as np
 
 # initialize the pygame module so we can utilize it
 pygame.init()
@@ -171,5 +169,4 @@ def main():
 
 
 if __name__ == "__main__":
-    #main()
-    print(np.round(raster_geometry.circle(20, 9, smoothing=1.0), 2) - np.round(raster_geometry.circle(20, 3, smoothing=0.5), 2))
+    main()
